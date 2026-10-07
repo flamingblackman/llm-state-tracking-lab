@@ -19,7 +19,7 @@ flowchart LR
     A[Player input<br/>session events] --> B[Gemini Custom Gem<br/>system prompt:<br/>rules, boundary constraints,<br/>state contract]
     D[(NotebookLM corpus<br/>versioned canon + Delta Log<br/>Google-managed embeddings + retrieval)] --> B
     B --> C[Gemini native inference]
-    C --> E["[TURN STATE]"<br/>structured Markdown state block<br/>every turn]
+    C --> E["[TURN STATE]"<br/>delta-only Markdown state block<br/>behind divider, every turn]
     E --> F{Self-audit<br/>every 5 turns}
     F --> G{Human audit:<br/>consistency check}
     G -->|verified| D
@@ -32,13 +32,15 @@ flowchart LR
 
 ## State-tracking techniques under test
 
-1. **Per-turn state blocks** — finer granularity than session-end logs. State is restated every turn, so drift has nowhere to hide between commits.
+1. **Per-turn state blocks (now delta-only)** — finer granularity than session-end logs. Started as full restatement every turn; upgraded Oct 2026 to delta-only blocks: each turn reports only what *changed*, everything else referenced by tag. Same drift protection (the audit diffs deltas against the last snapshot), far less context burn. The block sits behind a divider at the end of the turn — fiction first, mechanics last.
 2. **Open-loop tracking** — every unresolved narrative thread is tagged ADVANCING or PARKED in the state block. Threads can't be silently dropped; the audit checks the list.
 3. **World clocks** — background/off-screen state (faction plans, rival timelines) that advances on triggers *and* between sessions, whether the player is involved or not. The hardest case for an LLM: state the player never sees to catch errors in.
 4. **Self-audit turns** — every 5 turns, the model re-reads its own last state block and diffs it against what actually happened. Contradictions get an open `AUDIT FLAG` and a fix, never a silent overwrite. This sits *under* the human gate, not instead of it.
 5. **Canon compression ritual** — every 15–20 turns, the full state is distilled into a self-contained `[CANON BLOCK]` (premise, entity states, threads + status, clocks, character voice tags, scene). It can be pasted into a new chat to beat context rot — the long-context countermeasure.
 6. **NPC voice tags** — one line per character in every state block: how they talk + what they want. Character consistency treated as state, not vibes.
 7. **Versioned canon + Delta Log** — world-changing decisions are recorded as numbered deltas against a canon version (currently v2.0 for the mecha scenario). Spinoff/sequel scenarios declare a canon anchor and inherit all deltas up to it — branching storylines without cross-contamination. The corpus is append-only history, never rewritten, so the model can't silently retcon.
+8. **Cite, don't restate** — blocks reference corpus sections by tag (`[Races Codex §4]`) instead of re-explaining rules. The knowledge files carry the lore; the prompt mirrors retrieval anchors so the model cites instead of reciting. Extends the retrieval-over-prompt-stuffing decision into the output schema itself.
+9. **Session hygiene** — every session opens with a "previously on" rebuilt from the last closing state block. Full logs are never pasted back in — the compression ritual is the restart path. Kills context rot at session boundaries, where long-context sessions usually die.
 
 ## Components
 
@@ -51,8 +53,9 @@ flowchart LR
 
 - **Markdown as the state format:** token-efficient, human-readable, diffable, and easy to audit by eye — no tooling required to verify a commit.
 - **Forced output block every turn:** guarantees a commit point. State is never allowed to persist silently in conversation memory alone.
+- **Delta-only output:** full restatements were the biggest context burner in the system. Deltas against the last snapshot preserve auditability (every change is explicit) while keeping each turn's overhead proportional to what actually happened.
 - **Faction clocks as hidden state:** off-screen world state that must advance on triggers (failed rolls, elapsed time) *and* between sessions — the hardest case for an LLM, since the player never sees it to catch errors.
-- **Retrieval over prompt-stuffing:** long reference docs live in NotebookLM, not the system prompt, keeping the prompt lean and preserving the context window for live session state.
+- **Retrieval over prompt-stuffing:** long reference docs live in NotebookLM, not the system prompt, keeping the prompt lean and preserving the context window for live session state. Cite-don't-restate extends this into the output schema: blocks reference corpus sections by tag instead of reciting them.
 - **Human gate before commit:** numeric state is where LLMs hallucinate most. Unverified output never becomes source of truth.
 - **Append-only canon:** the corpus records history (deltas), never rewrites it. Versioning makes retcons structurally impossible rather than merely forbidden.
 
@@ -67,9 +70,15 @@ flowchart LR
 | Missed clock advancement (off-screen state stalls) | Explicit trigger rules + between-session ticks; every block must list all clocks |
 | Character voice drift | NPC voice tags (speech + want) in every state block, checked at audit |
 | Dropped plot threads | Open-loop list with ADVANCING/PARKED tags; audit verifies every thread is accounted for |
+| Context burn from restating full state every turn | Delta-only blocks: each turn logs only changes, tagged against the last snapshot |
+| Context rot at session boundaries | Session hygiene: "previously on" rebuilt from the last closing block; full logs never re-pasted |
 | Cross-scenario contamination (two scenarios, one apparatus) | Canon versions are namespaced per saga; each story carries its version in every block |
 | Retrieval misses (model ignores corpus) | Docs organized by mechanic; key terms mirrored in the prompt as retrieval anchors |
 | Compounding errors (bad state committed, then built on) | Human gate — nothing enters the corpus unaudited; deltas make history inspectable |
+
+## Next scenario under consideration: D&D campaign state for a human DM
+
+A friend of mine used to DM Dungeons & Dragons for me. The same apparatus maps directly onto what a DM tracks by hand: party HP and inventory, NPC dispositions, unresolved quest hooks, background faction plans. The idea is to run the state contract as a DM's assistant — per-turn state blocks, open-loop thread tags, NPC voice tags, world clocks — with the human DM as the audit gate instead of me. It would prove the design works with a second human in the loop, not just its designer. Not built yet; parked as the third scenario.
 
 ## Skills demonstrated
 

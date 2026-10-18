@@ -4,7 +4,7 @@
 
 ## What this is
 
-A test environment built with **Google Gemini custom Gems** and **Google NotebookLM**. Two long-running scenarios serve as stress tests: a grimdark Lovecraftian mecha RPG ("Cursed Resonance") and an original Dragon Ball saga ("Unwritten Age"). Both demand the same thing from the model: numeric stats, narrative threads, character voice consistency, and background event clocks must stay coherent across long sessions without hallucinating.
+A test environment built with **Google Gemini custom Gems** and **Google NotebookLM**. Four long-running scenarios serve as stress tests: a grimdark Lovecraftian mecha RPG ("Cursed Resonance"), an original Dragon Ball saga ("Unwritten Age"), a Jujutsu Kaisen saga ("The Hollow Vow"), and an original Digimon saga ("Pale Fire"). Both demand the same thing from the model: numeric stats, narrative threads, character voice consistency, and background event clocks must stay coherent across long sessions without hallucinating.
 
 ## What this is not
 
@@ -44,10 +44,35 @@ flowchart LR
 
 ## Components
 
-1. **System prompts (Gemini Gems)** — role definition, mechanics rulesets, boundary constraints, and the full state contract (turn blocks, clocks, audits, compression, voice tags). Documented: [`system-prompt.md`](system-prompt.md). A second Gem runs the Dragon Ball scenario on the same apparatus, proving the contract is genre-independent.
+1. **System prompts (Gemini Gems)** — role definition, mechanics rulesets, boundary constraints, and the full state contract (turn blocks, clocks, audits, compression, voice tags). Documented: [`system-prompt.md`](system-prompt.md). Four more Gems run the other sagas on the same apparatus — plus a fifth "Shadow Director" Gem that fires crossover ripple events between sagas — proving the contract is genre-independent.
 2. **Retrieval corpus (NotebookLM)** — world bibles, series bible (canon v2.0), enemy bestiary, and the Delta Log. Sample: [`docs/world-bible-resonance.md`](docs/world-bible-resonance.md)
 3. **Output schemas** — `[TURN STATE]` per turn, `[SESSION LOG FOR NOTEBOOK]` per session/combat. Samples: [`sample-logs/`](sample-logs/)
 4. **HITL validation pipeline** — self-audit → human audit → correct → commit. Nothing enters the corpus unaudited.
+
+## Living World Pipeline
+
+*The lab grew a night shift.* The state contract above covers what happens *during* a session. It didn't cover what happens *between* them: faction clocks stalled, off-screen NPCs froze, and canon only moved while someone was playing. So the apparatus got a second layer — an automated showrunner loop that runs the universe around the Gems.
+
+```mermaid
+flowchart LR
+    A[Canon Markdown<br/>per saga] --> B[canon-sync.sh<br/>.md → .docx, one command]
+    B --> C[Google Drive<br/>in-place, same file IDs]
+    C --> D[NotebookLM<br/>auto-syncs notebooks]
+    D --> E[Gem knowledge files<br/>refreshed]
+    F[Play sessions<br/>Gem chats] --> G[Nightly pipeline<br/>~9:40 PM ET]
+    G --> H[Session archives]
+    G --> I[Faction clock ledger]
+    G --> J[Drift scan<br/>vs canon]
+    J --> K[Per-saga brief]
+```
+
+**Canon sync (the maintenance flow):** edit the Markdown source of truth → run `canon-sync.sh` (rebuilds every `.docx` through a Markdown converter, one command) → upload in place to each saga's Drive folder (same file IDs, so no link ever breaks) → NotebookLM auto-syncs the notebooks → the Gems read refreshed knowledge files. No manual reformatting, no drift between the source and what the model sees.
+
+**Nightly loop:** read new play-chat messages since the last watermark → archive the session (raw log + chronicle delta + final turn state) → advance faction clocks and resolve off-screen NPC actions with real consequences → drift-scan new material against canon (contradictions flagged with a proposed fix, never silently rewritten) → write a per-saga brief (clock positions, what's about to detonate, hooks for next session). If no saga had new play, the run stays silent.
+
+**Operating rules:** read-only on play chats — the pipeline never types into or sends anything inside a session; anything outbound needs explicit per-message approval. The human alone decides canon. Seeded mysteries are never resolved, hinted at, or spent by the system. State lives in plain Markdown files (watermarks, ledgers, archives) — auditable, diffable, portable.
+
+Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the maintenance flow in detail, and the roadmap (Skills migration with self-narrating "meanwhile" interludes, voice play, recap podcasts, illustrated play, public Gem sharing).
 
 ## Design decisions
 
@@ -82,4 +107,5 @@ A friend of mine used to DM Dungeons & Dragons for me. The same apparatus maps d
 
 ## Skills demonstrated
 
-Prompt engineering · LLM state & schema design · long-context evaluation · retrieval-corpus design (RAG tooling) · human-in-the-loop QA · technical documentation
+Prompt engineering · LLM state & schema design · long-context evaluation · retrieval-corpus design (RAG tooling) · human-in-the-loop QA · technical documentation · scheduled automation pipelines · multi-agent orchestration
+

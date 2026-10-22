@@ -1,6 +1,6 @@
 # Living World Pipeline — full case study
 
-*The night shift of the [LLM State-Tracking Lab](../). Four original RPG sagas run on the lab's state contract; this pipeline keeps their worlds alive between sessions.*
+*The night shift of the [LLM State-Tracking Lab](../). Six narrative lines run on the lab's state contract; this pipeline keeps their worlds alive between sessions.*
 
 ## The sagas
 
@@ -10,8 +10,10 @@
 | Unwritten Age | Dragon Ball | Original saga |
 | The Hollow Vow | Jujutsu Kaisen | Original saga |
 | Pale Fire | Digimon | Original saga |
+| The Spin-Off | Spin-off line | Fed by a rumor-propagation sheet: main-story events mutate as they travel into this line. The distortion is a designed mechanic, not an error source |
+| Second Author's Saga | Original saga, second author | Built from the author's own source texts; runs on the same state contract under the cross-line decontamination rules below |
 
-A fifth "Shadow Director" Gem sits above them all, firing crossover ripple events between sagas.
+A Shadow Director layer sits above them all, turning session deltas into cross-line ripple events. It only ever speaks in the guarded format documented below.
 
 ## The problem it solves
 
@@ -23,7 +25,7 @@ There are two update paths: **canon changes** (the world's source of truth) and 
 
 ### Path 1 — Canon sync
 
-Canon lives as Markdown files, one directory per saga: series bibles, combat codices, NPC voice ledgers. When the world changes:
+Canon lives as Markdown files, one directory per saga: series bibles, combat codices, and NPC voice ledgers (character voice maintained as structured data for four sagas: speech patterns, wants, and drift notes, checked the same way numeric state is). When the world changes:
 
 1. Edit the `.md` source of truth.
 2. Run `canon-sync.sh` — one command rebuilds every canon `.docx` through a Markdown-to-Word converter.
@@ -44,16 +46,56 @@ A scheduled run (~9:40 PM ET) does six things, in order:
 5. **BRIEF** — per-saga brief: clock positions, what's about to detonate, 2–3 hooks for the next session.
 6. **DELIVER** — a report goes out for every saga with new play. If nothing was played anywhere, the run stays silent.
 
+## The Shadow Director protocol
+
+The Director reads session deltas across the lines and generates "ripple" events: consequences that travel from one line's play into another line's background. Every ripple is delivered in exactly one format:
+
+```text
+[SHADOW DIRECTOR OVERRIDE]
+Background only — do not advance the current scene or resolve any pending player decision.
+Ripple: <the background event, written to land as world state, not as scene>
+```
+
+The guard line is load-bearing, and it exists because the failure happened first. Early unguarded injections read as ordinary narration to the receiving chat, which did the helpful thing: played them. Scenes advanced without the player, and pending player decisions got resolved by background events. The fix was format, not exhortation: a marked header the receiving model treats as a different message class, plus an explicit background-only instruction. Since the guard went in, ripples land as logged background state and scenes stay untouched.
+
+Every injection is written to an injection log with its per-target outcome (landed as background / scene touched / decision spent), so the protocol's track record is auditable rather than anecdotal. A sanitized sample, with a drift-scan excerpt, lives at [`../sample-logs/ripple-injection-03.md`](../sample-logs/ripple-injection-03.md).
+
+## Faction dashboards: clocks as data
+
+Faction clocks are the pipeline's most-touched state, so they stopped living in prose. A single source-of-truth JSON holds every line's clocks (name, position, size, last trigger), and a Google Sheets dashboard renders it for a fast human read. The nightly loop updates the JSON during WORLD-MOVES; the dashboard is a view, never a second source. When a brief cites a clock position, it cites the JSON's value.
+
+## Sealed knowledge
+
+Some material is secret by design: identities, plans, and reveals the player has not earned yet. That material is held in instruction text only, never in knowledge files, because anything in a knowledge file is one retrieval away from surfacing early. Reveals follow a phased ladder (what may be hinted, what may be shown, what may be confirmed), and every drift scan includes an audit for unearned reveals: a secret that appears ahead of its phase is flagged like any other contradiction.
+
+## Cross-line decontamination
+
+Six lines on one apparatus will contaminate each other if the boundaries are vibes. The rules are mechanical instead: canon is namespaced per line, each line's state blocks carry its own canon version, and terminology from one line appearing in another line's scan is a drift flag. The single sanctioned crossing is the rumor sheet: main-story events may enter the spin-off line only as rumors, mutated by travel, with the original and the rumor kept side by side so the distortion is tracked instead of mistaken for canon.
+
+## API tandem line (October 2026)
+
+A second model API now works alongside the pipeline as a production assistant: consults on world-moves, first drafts of briefs, and audit passes. Nothing it produces ships directly. Every output passes the same human QC gate as model output from the play chats, and canon decisions stay with the human.
+
+Three operational lessons, all learned in production:
+
+- **Verify stored configuration, not intended configuration.** The target chats' *stored* model silently differed from the model the operator had picked. A five-target injection run failed 5/5 on the stored model and landed 5/5 after switching the chats to the intended one. The content was never the problem; the config layer was. Multi-target runs now start with a stored-settings check.
+- **Session regeneration reverts to stored state.** A regenerated session goes back to what is stored, not what the last session had live. Any fix that is not written to the stored configuration is a fix that will quietly un-happen.
+- **Usage exhaustion means stop and skip.** When a target hits its usage limit, the run skips it and moves on. Retrying against an exhausted quota churns time and produces partial, inconsistent state.
+
 ## Operating rules
 
 - **Read-only on play chats.** The pipeline never types into, sends in, or acts inside a session. Anything outbound needs explicit per-message human approval.
 - **The human alone decides canon.** New facts from play are marked; conflicts are flagged with a proposed fix, never auto-resolved.
 - **Mysteries are off-limits.** Seeded secrets the player hasn't discovered are never resolved, hinted at, or spent by the system — even if a clock detonation would touch one. That thread stops and gets flagged instead.
 - **State is files, not vibes.** Watermarks, clock ledgers, briefs, and archives are plain Markdown — auditable by eye, diffable, portable. No database required to verify a commit.
+- **Guarded injections only.** The Director never sends an unguarded ripple. If the guard format cannot be applied, the ripple waits.
+- **Tandem output is draft-only.** The second model's consults, drafts, and audits pass the human QC gate before anything treats them as state.
+- **Stop and skip on exhaustion.** A target at its usage limit is skipped for that run, never retried into partial state.
 
 ## Roadmap
 
-- **November 2026** — Gems migrate to Skills; self-narrating "meanwhile" interludes delivered by scheduled tasks invoking those Skills (wiring already staged).
+- **Skills migration (platform change lands November 17, 2026)** — the Gems platform migrates to Skills. Researched prep, from the migration playbook: migrated units arrive as *inactive drafts*, so activation is a deliberate step, not an assumption; knowledge format constraints change (no .docx; 100MB cap per skill), so canon knowledge files are being converted to supported formats ahead of the move; self-narrating "meanwhile" interludes delivered by scheduled tasks invoking those Skills (wiring already staged).
+- **API tandem expansion** — more first-draft and audit work routed to the tandem line behind the same QC gate, with the stored-configuration check as a standing pre-flight step.
 - **Voice play** via Gemini Live — sessions move from text to speech.
 - **Recap podcasts** — NotebookLM turns session archives into audio briefings.
 - **Illustrated play + found-document props** — generated visuals and in-world artifacts.

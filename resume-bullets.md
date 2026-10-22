@@ -11,6 +11,11 @@ Project title for resume: **LLM State-Tracking Lab — Prompt-Engineered State M
 - Added session-hygiene protocol: each session opens with a "previously on" rebuilt from the last closing state block instead of re-pasting full logs, killing context rot at session boundaries
 - Designed a canon-compression ritual that distills full session state into a portable canon block every 15–20 turns, countering context-window degradation without losing load-bearing state
 - Built a versioned-canon system (numbered Delta Log): world-changing decisions are recorded as deltas against a canon version, letting spinoff/sequel scenarios branch from a declared anchor without cross-contamination
-- Extended the lab to a second test scenario (an original Dragon Ball saga) to validate the same state-tracking apparatus across genres
+- Extended the lab to a second test scenario (an original Dragon Ball saga) to validate the same state-tracking apparatus across genres, and later to six narrative lines including a spin-off line and a second author's saga
+- Built a Living World Pipeline: watermark-based incremental sweeps across five live LLM roleplay chats (read past watermark, archive, advance faction clocks, drift scan, per-saga brief), with archives, clock ledgers, and briefs kept as structured, auditable artifacts
+- Designed a guarded cross-chat injection protocol (Shadow Director) after unguarded background events advanced live scenes and spent pending player decisions; the marked-header plus background-only guard format and a per-target injection log turned a recurring failure mode into a controlled mechanism
+- Built a one-command canon sync pipeline (canon-sync.sh): Markdown originals to generated .docx to in-place Google Doc updates with stable file IDs to NotebookLM and Gem knowledge refresh, so downstream references never break
+- Wired a second model API in as a production assistant (consults, first drafts, audits) behind a human QC gate; documented the operational lessons, including verifying stored model configuration before multi-target runs and a stop-and-skip rule for usage exhaustion
+- Maintained NPC voice ledgers for four sagas and a JSON-to-Sheets faction dashboard, so character voice and world clocks are managed as structured data with a single source of truth
 
-Skills line: Prompt Engineering · LLM State Management · RAG Tooling (NotebookLM) · Human-in-the-Loop QA · Markdown Schema Design
+Skills line: Prompt Engineering · LLM State Management · RAG Tooling (NotebookLM) · Human-in-the-Loop QA · Markdown Schema Design · Multi-Agent Orchestration · Scheduled Automation Pipelines · Cross-Model QC

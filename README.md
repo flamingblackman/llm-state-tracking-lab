@@ -4,7 +4,7 @@
 
 ## What this is
 
-A test environment built with **Google Gemini custom Gems** and **Google NotebookLM**. Four long-running scenarios serve as stress tests: a grimdark Lovecraftian mecha RPG ("Cursed Resonance"), an original Dragon Ball saga ("Unwritten Age"), a Jujutsu Kaisen saga ("The Hollow Vow"), and an original Digimon saga ("Pale Fire"). Both demand the same thing from the model: numeric stats, narrative threads, character voice consistency, and background event clocks must stay coherent across long sessions without hallucinating.
+A test environment built with **Google Gemini custom Gems** and **Google NotebookLM**. Six narrative lines now run as stress tests: four original sagas (a grimdark Lovecraftian mecha RPG, "Cursed Resonance"; an original Dragon Ball saga, "Unwritten Age"; a Jujutsu Kaisen saga, "The Hollow Vow"; an original Digimon saga, "Pale Fire"), a spin-off line fed by a rumor-propagation mechanic, and a second author's saga built from their own source texts. Each demands the same thing from the model: numeric stats, narrative threads, character voice consistency, and background event clocks must stay coherent across long sessions without hallucinating.
 
 ## What this is not
 
@@ -41,6 +41,10 @@ flowchart LR
 7. **Versioned canon + Delta Log** — world-changing decisions are recorded as numbered deltas against a canon version (currently v2.0 for the mecha scenario). Spinoff/sequel scenarios declare a canon anchor and inherit all deltas up to it — branching storylines without cross-contamination. The corpus is append-only history, never rewritten, so the model can't silently retcon.
 8. **Cite, don't restate** — blocks reference corpus sections by tag (`[Races Codex §4]`) instead of re-explaining rules. The knowledge files carry the lore; the prompt mirrors retrieval anchors so the model cites instead of reciting. Extends the retrieval-over-prompt-stuffing decision into the output schema itself.
 9. **Session hygiene** — every session opens with a "previously on" rebuilt from the last closing state block. Full logs are never pasted back in — the compression ritual is the restart path. Kills context rot at session boundaries, where long-context sessions usually die.
+10. **Shadow Director guarded injections** — a meta-director layer reads session deltas across lines and generates cross-line "ripple" events, injected into target chats in a guarded format: a `[SHADOW DIRECTOR OVERRIDE]` header plus the guard line "Background only — do not advance the current scene or resolve any pending player decision." The guard exists because unguarded injections did exactly that: advanced live scenes and spent decisions the player had not made yet. A documented failure mode, a designed mitigation, and a full injection log with per-target outcomes. Protocol detail and a sample: [`living-world-pipeline/`](living-world-pipeline/) and [`sample-logs/ripple-injection-03.md`](sample-logs/ripple-injection-03.md).
+11. **Sealed-knowledge architecture** — secret material lives in instruction text only, never in knowledge files, so retrieval can never surface it early. Reveals follow a phased ladder, and every drift scan audits for reveals that arrived ahead of schedule. Least disclosure, applied to fiction: the model only ever holds what the current phase allows it to know.
+12. **Faction dashboards (clocks as data)** — world clocks live in a single source-of-truth JSON that feeds a Google Sheets dashboard. Clock state is data with one owner, not prose scattered across archives; the pipeline updates the JSON, and every view of the world reads from it.
+13. **API tandem line** — a second model API works as a production assistant (consults, first drafts, audits) behind a human QC gate. Its output is draft-only until reviewed against canon. The operational lessons from running it are documented in the case study, including the run where a target chat's stored model silently differed from the intended one: five injections failed 5/5 on the stored model and landed 5/5 after the switch.
 
 ## Components
 
@@ -72,7 +76,11 @@ flowchart LR
 
 **Operating rules:** read-only on play chats — the pipeline never types into or sends anything inside a session; anything outbound needs explicit per-message approval. The human alone decides canon. Seeded mysteries are never resolved, hinted at, or spent by the system. State lives in plain Markdown files (watermarks, ledgers, archives) — auditable, diffable, portable.
 
-Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the maintenance flow in detail, and the roadmap (Skills migration with self-narrating "meanwhile" interludes, voice play, recap podcasts, illustrated play, public Gem sharing).
+**Shadow Director:** the pipeline also runs a meta-director layer that turns session deltas into cross-line ripple events, delivered only in the guarded injection format (technique 10 above). Unguarded background events are a solved failure mode here, documented with its fix.
+
+**API tandem:** a second model API assists the pipeline (consults, first drafts, audits) behind a human QC gate. Standing rules from production use: verify a target chat's *stored* configuration before any multi-target run, because session regeneration reverts to stored state; and on usage exhaustion, stop and skip the target rather than churning retries.
+
+Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the maintenance flow, the Director protocol, the tandem-line lessons, and the roadmap (Skills migration prep for the November 17, 2026 platform change, API tandem expansion, voice play, recap podcasts, illustrated play, public sharing).
 
 ## Design decisions
 
@@ -100,6 +108,10 @@ Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the main
 | Cross-scenario contamination (two scenarios, one apparatus) | Canon versions are namespaced per saga; each story carries its version in every block |
 | Retrieval misses (model ignores corpus) | Docs organized by mechanic; key terms mirrored in the prompt as retrieval anchors |
 | Compounding errors (bad state committed, then built on) | Human gate — nothing enters the corpus unaudited; deltas make history inspectable |
+| Unguarded cross-chat injection (background event hijacks a live scene) | Guarded format only: `[SHADOW DIRECTOR OVERRIDE]` header + background-only guard line; every injection logged with its per-target outcome |
+| Unearned reveal (sealed secret surfaces before its phase) | Secrets held in instruction text only, never in knowledge files; phased reveal ladder; drift scans audit for early reveals |
+| Stored configuration differs from intended (wrong model serves a chat) | Pre-flight check of stored settings before multi-target runs; diagnose at the config layer before retrying content |
+| Second-model drift (assistant drafts off-canon material) | QC gate: tandem output is draft-only until a human reviews it against canon |
 
 ## Next scenario under consideration: D&D campaign state for a human DM
 
@@ -107,5 +119,5 @@ A friend of mine used to DM Dungeons & Dragons for me. The same apparatus maps d
 
 ## Skills demonstrated
 
-Prompt engineering · LLM state & schema design · long-context evaluation · retrieval-corpus design (RAG tooling) · human-in-the-loop QA · technical documentation · scheduled automation pipelines · multi-agent orchestration
+Prompt engineering · LLM state & schema design · long-context evaluation · retrieval-corpus design (RAG tooling) · human-in-the-loop QA · technical documentation · scheduled automation pipelines · multi-agent orchestration · cross-model QC workflows
 

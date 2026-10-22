@@ -120,6 +120,42 @@ Sequencing: Item 2 enables Item 1 (a quarantined corpus is testable). Item 1 gat
 *Design:* after each pipeline sweep, generate one compact, versioned state block per saga (clocks, open threads, pending decisions, pilot condition) and append it to that Gem's instructions, superseding the previous card. The append-and-verify mechanism already exists (it is how correction blocks are delivered); this item turns it into a rhythm.
 *Why it matters:* it shows state management moving from prose memory to controlled, versioned artifacts: the lab's thesis in miniature.
 
+### The Living World cluster (planned)
+
+Five mechanics that run on one base rule. All planned, none shipped yet.
+
+**Base rule: one action per faction per sweep.**
+*Problem:* faction clocks measure pressure, but a countdown is not an opponent. Factions can feel static between detonations.
+*Design:* every living-world sweep, each active faction takes ONE concrete off-screen action toward its agenda, logged in its clock ledger (a seizure, a purchase, a recruitment, a burial). Every item below runs on this rule.
+*Why it matters:* it is the difference between a world that waits and a world that moves. Simple, auditable, and the engine under the rest of this cluster.
+
+**LW-1. The Scavenger Cascade.**
+*Problem:* the player's battlefields and abandoned sites sit frozen in the archive after he leaves them.
+*Design:* the sweep tags sites of wreckage, casualties, or power vacuums as carrion nodes, each spawning a short clock. Minor factions and opportunists strip the site; when the clock fills, a low-tier group returns upgraded with the player's own leftovers (salvaged gear, claimed micro-turf, mutated capability).
+*Why it matters:* consequences with a half-life. The player's past violence literally re-enters the story wearing his discarded equipment.
+
+**LW-2. Weaponized Rumor Feedback (closed-loop mutation).**
+*Problem:* the spin-off's rumor engine runs one way: main-saga events mutate as they travel outward, then stop.
+*Design:* close the loop. A distorted version (the Myth) that survives two spin-off sessions unchallenged is exported back into the main saga as a Foreign Misconception: factions react to the exaggeration instead of the truth, fortifying against capabilities the player does not have, repricing bounties on a legend.
+*Why it matters:* the player ends up fighting his own mythology. Emergent, cheap, and unique to this system's two-layer saga structure.
+
+**LW-3. Debt & Favor Economy (NPC off-screen agency).**
+*Problem:* NPCs freeze when the player is not looking at them; neglected contacts wait forever in narrative stasis.
+*Design:* key NPCs carry one pressure tag (hunted, broke, desperate). If the player ignores a pressured NPC for two sessions while a related faction clock advances, the NPC resolves their own crisis off-screen via a Bad Bargain with a rising faction, logged as a compromised-by tag in their voice ledger.
+*Why it matters:* relationships decay and mutate on their own clock. Returning to a contact whose problems are mysteriously solved is a story beat no static NPC system produces.
+
+**LW-4. Voice Ledger Contagion.**
+*Problem:* voice ledgers keep NPCs consistent but static; consistency without drift reads as robotic over a long campaign.
+*Design:* two dynamic tags updated at drift scan. Borrowed cadence: allies absorb the player's own phrases and rationalizations over time. Grudge drift: a neglected NPC's registered voice shifts colder (clipped, formal, cynical) before any story event explains why.
+*Why it matters:* social momentum you can hear. Relationship state becomes audible in dialogue before it becomes plot.
+
+**LW-5. Sensory Weather (environmental memory).**
+*Problem:* faction dominance gets announced in exposition ("Faction X is winning") instead of felt in description.
+*Design:* a three-line District Texture Block tops each saga brief (signage and architecture, street smell and sound, civilian micro-behavior). When a clock crosses its halfway mark or a bounty posts, one line is rewritten. Gems describe from the block; the world shows its politics through bartenders demanding hard currency and locals crossing the street.
+*Why it matters:* near-zero cost, constant payoff. Texture as a state variable, versioned like everything else in the lab.
+
+**Horizon.** After the November 17, 2026 Gems-to-Skills migration, scheduled tasks can invoke a saga directly, making true between-session "meanwhile" interludes possible: the platform unlock this cluster is designed to grow into.
+
 ## Why this matters
 
 This is applied AI systems work, not a toy demo:

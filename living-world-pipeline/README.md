@@ -101,57 +101,63 @@ Three operational lessons, all learned in production:
 - **Illustrated play + found-document props** — generated visuals and in-world artifacts.
 - **Public Gem sharing** — packaged, shareable versions of the saga Gems.
 
-### The next three builds (planned)
+### Consolidated build order (October 22, 2026)
 
-Sequencing: Item 2 enables Item 1 (a quarantined corpus is testable). Item 1 gates Item 3 (the state card earns trust once the suite passes). All three are planned work, not shipped features.
+This order supersedes the sequencing in today's earlier roadmap notes. It came out of a two-round design spar over the whole project; what follows is the settled version. Everything here is planned work, labeled with its build position.
 
-**1. Canon Test Suite (evaluation harness).**
-*Problem:* the lab claims retrieval strategy as a designed skill, but retrieval quality is never measured. Canon can rot silently (stale sources, superseded material) and nobody knows until a session goes sideways.
-*Design:* (a) Golden questions: a fixed set of questions per saga with known-correct answers, run against the NotebookLM notebooks after every canon sync, with pass/fail logged. (b) Adversarial probes: deliberately canon-contradicting statements fed to the Gems to find where the models fold or hallucinate; weak spots get logged as high-risk lore nodes. Together they turn canon accuracy from a hope into a checked metric.
-*Why it matters:* this is the item that makes the portfolio's central claim (designed corpus plus retrieval strategy on a managed RAG platform) falsifiable, and therefore credible. It is real LLM-ops work: evaluation, regression checks, adversarial testing.
+**Step 1 — Item 0: Pre-Migration Skill Packaging Spec (highest urgency, due before November 17, 2026).**
+*Problem:* Gems migrate to Skills on November 17. Migrated units arrive as inactive drafts, under stricter knowledge-format constraints. An unprepared cutover risks six live sagas waking up in a new format with unverified instructions and no sync path.
+*Design:* (a) Instruction mapping: a SKILL.md structure per saga, with explicit boundaries for persona and mechanics, the standing rituals, and the sealed reveal ladder. (b) A knowledge-format and sync-fallback audit, including the known trap: if Skills do not auto-sync live Google Docs by ID, the canon-sync script gains a fallback branch that emits clean .md bundles alongside the .docx output. (c) A cutover runbook: all six Gems' instruction blocks exported to local, versioned backups by November 15, plus a post-migration activation and verification ritual.
+*Why it matters:* every other item on this roadmap assumes the sagas survive the platform move. This one makes sure they do.
 
-**2. Corpus Quarantine + Lifecycle Tags.**
-*Problem:* superseded canon stays in the active retrieval corpus. Live example: two corpus documents still describe a deleted continuity's protagonist and a retired power system. The Gem layer carries override instructions, but NotebookLM retrieval surfaces the dead material as if it were current.
-*Design:* every corpus section carries a lifecycle tag (Active / Historical / Archive), and superseded material is quarantined out of the active corpus rather than merely overridden in prompts. Retrieval weight follows the living story by structure, not by instruction-fighting.
-*Why it matters:* it demonstrates corpus governance, the unglamorous discipline that separates a designed corpus from a pile of uploads. It pairs with the test suite: quarantine is what the golden questions verify.
+**Step 2 — Baseline Canon Test Suite, the dirty run.** Golden questions run against the corpus exactly as it stands in NotebookLM, plus adversarial probes: 3 per saga, run only on canon commits, in disposable fresh Gem chats that are deleted afterward (never in live play chats; context pollution). The baseline's failures are not hidden. They are recorded, and they are portfolio evidence: this is what turns the lab's central claim (designed corpus plus retrieval strategy on a managed RAG platform) into a checked metric instead of a hope.
 
-**3. Living State Card.**
-*Problem:* each Gem reconstructs "current state" from a long, drifting chat history. State errors compound across sessions.
-*Design:* after each pipeline sweep, generate one compact, versioned state block per saga (clocks, open threads, pending decisions, pilot condition) and append it to that Gem's instructions, superseding the previous card. The append-and-verify mechanism already exists (it is how correction blocks are delivered); this item turns it into a rhythm.
-*Why it matters:* it shows state management moving from prose memory to controlled, versioned artifacts: the lab's thesis in miniature.
+**Step 3 — File-Level Corpus Quarantine.** Superseded documents are removed from the active source set. Lifecycle tags alone do not work here: NotebookLM chunking ignores document headers, so a tag the retriever cannot see is bookkeeping, not governance. Tags (Active / Historical / Archive) stay as bookkeeping only. After quarantine, the suite re-runs and the clean pass is recorded next to the dirty baseline. The live problem this fixes is real: corpus documents still describe a deleted continuity's protagonist and a retired power system, and retrieval surfaces that dead material as if it were current.
+
+**Step 4 — Portfolio Proof Pack.** (a) A swimlane boundary in the README: deterministic code in one column, LLM-in-the-loop orchestration in the other, no blurring. (b) One redacted end-to-end diff artifact: raw play excerpt, drift scan output, the exact clock JSON diff, then a session brief carrying a guarded injection. (c) The before/after quarantine test scores from steps 2 and 3.
+
+**Step 5 — Living State Card, redesigned as a Session-Start State Handshake.** The card is injected into the play chat at session start: a superseding header, diffs stated explicitly, and the Gem echoes the card ID in its state blocks so the handshake is verifiable in the log. It never goes in Gem instructions and never rides a mounted Doc. The handshake also carries the LW-5 texture block and cycle state (below). The Sensory Cold Open, a two-sentence pan at scene transitions (one clock symptom, one texture detail), ships as a one-time standing instruction in the same step.
+
+**Step 6 — Base Rule + LW-3 (Debt & Favor) + LW-4 Grudge Drift only.** Borrowed Cadence is cut as a mechanic (parrot risk); it survives only as a drift-scan observation. Specs in the cluster below.
+
+**Step 7 — LW-1 (Scavenger Cascade), capped at one active node per saga; then LW-2 (Weaponized Rumor Feedback) last, under review.** Gemini's spar position was to cut LW-2 entirely: its payoff is hostage to two sagas' play cadence. The hub's dissent stands on the record: the one-way rumor engine already runs, so the marginal cost is a briefs rule. LW-2 is listed last with that note rather than dropped. Bryan's call.
+
+**Integrity additions (planned).** The drift scan gains a reaction proportionality check: NPC reactions that exceed publicly established stakes get flagged, which catches leaks by implication that category gates miss. A schema and consistency gate on state writes (clock bounds, no silent decreases) is planned as the named fix for the chat-to-state extraction boundary.
+
+**Sequencing logic.** Pipeline-side items (the base rule, LW-1/2/3, grudge drift, the LW-5 math) are migration-proof. NotebookLM-side items (quarantine, golden questions) are near-proof. Only delivery mechanisms sit on the Gem surface, and only those carry November 17 risk. The order spends effort where the platform cannot take it away first.
 
 ### The Living World cluster (planned)
 
-Five mechanics that run on one base rule. All planned, none shipped yet.
+Five mechanics that run on one base rule. All planned, none shipped yet. Build positions are set by the consolidated order above.
 
 **Base rule: one action per faction per sweep.**
 *Problem:* faction clocks measure pressure, but a countdown is not an opponent. Factions can feel static between detonations.
 *Design:* every living-world sweep, each active faction takes ONE concrete off-screen action toward its agenda, logged in its clock ledger (a seizure, a purchase, a recruitment, a burial). Every item below runs on this rule.
 *Why it matters:* it is the difference between a world that waits and a world that moves. Simple, auditable, and the engine under the rest of this cluster.
 
-**LW-1. The Scavenger Cascade.**
+**LW-1. The Scavenger Cascade.** (Build step 7, capped at one active node per saga.)
 *Problem:* the player's battlefields and abandoned sites sit frozen in the archive after he leaves them.
 *Design:* the sweep tags sites of wreckage, casualties, or power vacuums as carrion nodes, each spawning a short clock. Minor factions and opportunists strip the site; when the clock fills, a low-tier group returns upgraded with the player's own leftovers (salvaged gear, claimed micro-turf, mutated capability).
 *Why it matters:* consequences with a half-life. The player's past violence literally re-enters the story wearing his discarded equipment.
 
-**LW-2. Weaponized Rumor Feedback (closed-loop mutation).**
+**LW-2. Weaponized Rumor Feedback (closed-loop mutation).** (Build step 7, last; under review, Bryan's call. See step 7 for the cut/dissent record.)
 *Problem:* the spin-off's rumor engine runs one way: main-saga events mutate as they travel outward, then stop.
 *Design:* close the loop. A distorted version (the Myth) that survives two spin-off sessions unchallenged is exported back into the main saga as a Foreign Misconception: factions react to the exaggeration instead of the truth, fortifying against capabilities the player does not have, repricing bounties on a legend.
 *Why it matters:* the player ends up fighting his own mythology. Emergent, cheap, and unique to this system's two-layer saga structure.
 
-**LW-3. Debt & Favor Economy (NPC off-screen agency).**
+**LW-3. Debt & Favor Economy (NPC off-screen agency).** (Build step 6.)
 *Problem:* NPCs freeze when the player is not looking at them; neglected contacts wait forever in narrative stasis.
 *Design:* key NPCs carry one pressure tag (hunted, broke, desperate). If the player ignores a pressured NPC for two sessions while a related faction clock advances, the NPC resolves their own crisis off-screen via a Bad Bargain with a rising faction, logged as a compromised-by tag in their voice ledger.
 *Why it matters:* relationships decay and mutate on their own clock. Returning to a contact whose problems are mysteriously solved is a story beat no static NPC system produces.
 
-**LW-4. Voice Ledger Contagion.**
+**LW-4. Voice Ledger Contagion: Grudge Drift.** (Build step 6. Borrowed Cadence is cut as a mechanic; see below.)
 *Problem:* voice ledgers keep NPCs consistent but static; consistency without drift reads as robotic over a long campaign.
-*Design:* two dynamic tags updated at drift scan. Borrowed cadence: allies absorb the player's own phrases and rationalizations over time. Grudge drift: a neglected NPC's registered voice shifts colder (clipped, formal, cynical) before any story event explains why.
+*Design:* one dynamic tag updated at drift scan. Grudge drift: a neglected NPC's registered voice shifts colder (clipped, formal, cynical) before any story event explains why. The companion idea, Borrowed Cadence (allies absorbing the player's own phrases and rationalizations), was cut as a mechanic in the October 22 spar: systematizing it risks parroting. It survives only as a drift-scan observation, noted when it appears naturally, never engineered.
 *Why it matters:* social momentum you can hear. Relationship state becomes audible in dialogue before it becomes plot.
 
 **LW-5. Sensory Weather (environmental memory).**
 *Problem:* faction dominance gets announced in exposition ("Faction X is winning") instead of felt in description.
-*Design:* a three-line District Texture Block tops each saga brief (signage and architecture, street smell and sound, civilian micro-behavior). When a clock crosses its halfway mark or a bounty posts, one line is rewritten. Gems describe from the block; the world shows its politics through bartenders demanding hard currency and locals crossing the street.
+*Design:* a three-line District Texture Block tops each saga brief (signage and architecture, street smell and sound, civilian micro-behavior). When a clock crosses its halfway mark or a bounty posts, one line is rewritten. Gems describe from the block; the world shows its politics through bartenders demanding hard currency and locals crossing the street. Delivery: the texture block and cycle state ride the Session-Start State Handshake (build step 5), and the Sensory Cold Open ships with that step.
 *Why it matters:* near-zero cost, constant payoff. Texture as a state variable, versioned like everything else in the lab.
 
 *Cycles layer (the designer's own addition):* texture should not only react to faction clocks. Some of it runs on world-owned schedules the player can learn and plan around, so Sensory Weather is threshold rewrites PLUS tracked cycles. Every saga has candidate cycles: lunar phases, tides, market days, school terms, a frozen dawn that refuses to advance. Worked example, from the Dragon Ball line: a **moon tracker**. Each planet the protagonist has visited gets its moon phases tracked as pipeline state, advanced by in-story elapsed time at each sweep, with positions never invented before the story establishes a sky. In that universe a full moon changes what a night means for a Saiyan body, so a full moon falling within one in-story day of a scene gets flagged in the brief: the sky enters the description before it enters the fight.

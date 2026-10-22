@@ -154,6 +154,8 @@ Five mechanics that run on one base rule. All planned, none shipped yet.
 *Design:* a three-line District Texture Block tops each saga brief (signage and architecture, street smell and sound, civilian micro-behavior). When a clock crosses its halfway mark or a bounty posts, one line is rewritten. Gems describe from the block; the world shows its politics through bartenders demanding hard currency and locals crossing the street.
 *Why it matters:* near-zero cost, constant payoff. Texture as a state variable, versioned like everything else in the lab.
 
+*Cycles layer (the designer's own addition):* texture should not only react to faction clocks. Some of it runs on world-owned schedules the player can learn and plan around, so Sensory Weather is threshold rewrites PLUS tracked cycles. Every saga has candidate cycles: lunar phases, tides, market days, school terms, a frozen dawn that refuses to advance. Worked example, from the Dragon Ball line: a **moon tracker**. Each planet the protagonist has visited gets its moon phases tracked as pipeline state, advanced by in-story elapsed time at each sweep, with positions never invented before the story establishes a sky. In that universe a full moon changes what a night means for a Saiyan body, so a full moon falling within one in-story day of a scene gets flagged in the brief: the sky enters the description before it enters the fight.
+
 **Horizon.** After the November 17, 2026 Gems-to-Skills migration, scheduled tasks can invoke a saga directly, making true between-session "meanwhile" interludes possible: the platform unlock this cluster is designed to grow into.
 
 ## Why this matters

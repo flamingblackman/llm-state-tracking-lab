@@ -101,6 +101,25 @@ Three operational lessons, all learned in production:
 - **Illustrated play + found-document props** — generated visuals and in-world artifacts.
 - **Public Gem sharing** — packaged, shareable versions of the saga Gems.
 
+### The next three builds (planned)
+
+Sequencing: Item 2 enables Item 1 (a quarantined corpus is testable). Item 1 gates Item 3 (the state card earns trust once the suite passes). All three are planned work, not shipped features.
+
+**1. Canon Test Suite (evaluation harness).**
+*Problem:* the lab claims retrieval strategy as a designed skill, but retrieval quality is never measured. Canon can rot silently (stale sources, superseded material) and nobody knows until a session goes sideways.
+*Design:* (a) Golden questions: a fixed set of questions per saga with known-correct answers, run against the NotebookLM notebooks after every canon sync, with pass/fail logged. (b) Adversarial probes: deliberately canon-contradicting statements fed to the Gems to find where the models fold or hallucinate; weak spots get logged as high-risk lore nodes. Together they turn canon accuracy from a hope into a checked metric.
+*Why it matters:* this is the item that makes the portfolio's central claim (designed corpus plus retrieval strategy on a managed RAG platform) falsifiable, and therefore credible. It is real LLM-ops work: evaluation, regression checks, adversarial testing.
+
+**2. Corpus Quarantine + Lifecycle Tags.**
+*Problem:* superseded canon stays in the active retrieval corpus. Live example: two corpus documents still describe a deleted continuity's protagonist and a retired power system. The Gem layer carries override instructions, but NotebookLM retrieval surfaces the dead material as if it were current.
+*Design:* every corpus section carries a lifecycle tag (Active / Historical / Archive), and superseded material is quarantined out of the active corpus rather than merely overridden in prompts. Retrieval weight follows the living story by structure, not by instruction-fighting.
+*Why it matters:* it demonstrates corpus governance, the unglamorous discipline that separates a designed corpus from a pile of uploads. It pairs with the test suite: quarantine is what the golden questions verify.
+
+**3. Living State Card.**
+*Problem:* each Gem reconstructs "current state" from a long, drifting chat history. State errors compound across sessions.
+*Design:* after each pipeline sweep, generate one compact, versioned state block per saga (clocks, open threads, pending decisions, pilot condition) and append it to that Gem's instructions, superseding the previous card. The append-and-verify mechanism already exists (it is how correction blocks are delivered); this item turns it into a rhythm.
+*Why it matters:* it shows state management moving from prose memory to controlled, versioned artifacts: the lab's thesis in miniature.
+
 ## Why this matters
 
 This is applied AI systems work, not a toy demo:

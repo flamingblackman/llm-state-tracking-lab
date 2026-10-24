@@ -53,6 +53,10 @@ flowchart LR
 3. **Output schemas** — `[TURN STATE]` per turn, `[SESSION LOG FOR NOTEBOOK]` per session/combat. Samples: [`sample-logs/`](sample-logs/)
 4. **HITL validation pipeline** — self-audit → human audit → correct → commit. Nothing enters the corpus unaudited.
 
+## Roadmap snapshot
+
+The full public roadmap lives in [`ROADMAP.md`](ROADMAP.md). The sequence in brief: protect the November 17, 2026 platform migration (Item 0); validate the reference saga with a dirty-baseline test suite and a corpus quarantine; build the Proof Pack and the Session-Start State Handshake; implement the deterministic parser under the State Reconciliation Contract; then extract that same reconciliation pattern into a business demo on fictional CRM-style records, with measured results published before any portfolio claim rests on it. The living-world mechanics (Base Rule v2, LW-3, LW-4, capped LW-1, conditional LW-2) stay in the consolidated build order in the case study.
+
 ## Component status
 
 Status key: **Implemented** = running in production play. **Proposed** = design ratified, build not started. **Planned** = sequenced in the build order (see the case study roadmap).
@@ -74,6 +78,7 @@ Status key: **Implemented** = running in production play. **Proposed** = design 
 | LW-1 Scavenger Cascade (capped) | Planned — build step 7 |
 | LW-2 Weaponized Rumor Feedback (closed design, conditions in the case study) | Planned — build step 7, last |
 | State Reconciliation Contract + deterministic pre-sweep parser (first target: the reference saga) | Proposed — contract adopted Oct 23, 2026; governs the parser build |
+| Business reconciliation demo (fictional CRM-style records, measured evaluation) | Proposed — approved in principle Oct 23, 2026; starts only after the parser demonstrates the contract on the reference saga |
 | Epistemic typing ([FACT] / [BELIEF: holder]) + Epistemic Promotion Audit | Proposed — lands with the drift-scan/parser work |
 | Fun layer (Forked Consequence engine, voice-ledger merge, cycle exploit windows, pipeline-selected callbacks, natural stopping points) | Proposed — ratified Oct 23, 2026; Gem-instruction pieces batch into Item 0's edit window |
 
@@ -106,7 +111,7 @@ flowchart LR
 
 **API tandem:** a second model API assists the pipeline (consults, first drafts, audits) behind a human QC gate. Standing rules from production use: verify a target chat's *stored* configuration before any multi-target run, because session regeneration reverts to stored state; and on usage exhaustion, stop and skip the target rather than churning retries.
 
-Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the maintenance flow, the Director protocol, the tandem-line lessons, and the roadmap (Skills migration prep for the November 17, 2026 platform change, API tandem expansion, voice play, recap podcasts, illustrated play, public sharing).
+Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the maintenance flow, the Director protocol, the tandem-line lessons, and the detailed design roadmap. The public execution roadmap, including the business reconciliation demo, is [`ROADMAP.md`](ROADMAP.md).
 
 ## Design decisions
 

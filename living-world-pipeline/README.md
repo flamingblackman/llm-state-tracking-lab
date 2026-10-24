@@ -156,6 +156,14 @@ This order supersedes the sequencing in today's earlier roadmap notes. It came o
 
 **Sequencing logic.** Pipeline-side items (the base rule, LW-1/2/3, grudge drift, the LW-5 math) are migration-proof. NotebookLM-side items (quarantine, golden questions) are near-proof. Only delivery mechanisms sit on the Gem surface, and only those carry November 17 risk. The order spends effort where the platform cannot take it away first.
 
+### Portfolio translation track (added October 23, 2026)
+
+The consolidated build order above keeps the story system correct. A second track turns that correctness into career evidence, sequenced by dependency and written up in full in [`../ROADMAP.md`](../ROADMAP.md):
+
+1. **Deterministic pre-sweep parser, first target the reference saga (The Hollow Vow).** Its state block is standardized as part of reference setup, and the parser is built under the State Reconciliation Contract in the integrity additions above: unique delta IDs, idempotent replay, stale-base flagging, conflicts preserved instead of newest-wins, malformed input rejected to an exception queue.
+2. **Business reconciliation demo.** Once the parser demonstrates the contract on session text, the same engine is extracted and run against 30–50 fictional CRM-style update events: duplicate leads, stale versions, conflicting fields, missing required data, unsupported claims. Expected outcomes are defined before the run; the evaluation is published either way, with denominators, pass rates, exception counts, and known failures. The records are fictional and local; no CRM integration is claimed.
+3. **Portfolio presentation, gated on the measured results.** LinkedIn and resume framing updates wait until the demo's numbers exist. The story lab stays the real use case; the demo is the labeled transfer evidence.
+
 ### The Living World cluster (planned)
 
 Five mechanics that run on one base rule. All planned, none shipped yet. Build positions are set by the consolidated order above.

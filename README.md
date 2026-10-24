@@ -28,7 +28,7 @@ flowchart LR
     I -->|portable restart| B
 ```
 
-**The loop:** the Gem runs the session, emitting a mandatory structured state block at the end of every turn. Every 5 turns it re-reads its own last block and flags contradictions openly (self-audit). I audit each block against the prior log and the world bible, correct any drift, and commit the verified log to the NotebookLM corpus — which the Gem references in subsequent sessions. Every 15–20 turns the Gem distills everything into a portable canon block that can restart the session in a fresh context with zero loss of load-bearing state.
+**The loop:** the Gem runs the session, emitting a mandatory structured state block at the end of every turn. Every 5 turns it re-reads its own last block and flags contradictions openly (self-audit). I audit each block against the prior log and the world bible, correct any drift, and commit the verified log to the NotebookLM corpus — which the Gem references in subsequent sessions. Every 15–20 turns the Gem distills everything into a portable canon block that can restart the session in a fresh context — designed to preserve the defined load-bearing state, and tested against a set of restart cases.
 
 ## State-tracking techniques under test
 
@@ -42,16 +42,42 @@ flowchart LR
 8. **Cite, don't restate** — blocks reference corpus sections by tag (`[Races Codex §4]`) instead of re-explaining rules. The knowledge files carry the lore; the prompt mirrors retrieval anchors so the model cites instead of reciting. Extends the retrieval-over-prompt-stuffing decision into the output schema itself.
 9. **Session hygiene** — every session opens with a "previously on" rebuilt from the last closing state block. Full logs are never pasted back in — the compression ritual is the restart path. Kills context rot at session boundaries, where long-context sessions usually die.
 10. **Shadow Director guarded injections** — a meta-director layer reads session deltas across lines and generates cross-line "ripple" events, injected into target chats in a guarded format: a `[SHADOW DIRECTOR OVERRIDE]` header plus the guard line "Background only — do not advance the current scene or resolve any pending player decision." The guard exists because unguarded injections did exactly that: advanced live scenes and spent decisions the player had not made yet. A documented failure mode, a designed mitigation, and a full injection log with per-target outcomes. Protocol detail and a sample: [`living-world-pipeline/`](living-world-pipeline/) and [`sample-logs/ripple-injection-03.md`](sample-logs/ripple-injection-03.md).
-11. **Sealed-knowledge architecture** — secret material lives in instruction text only, never in knowledge files, so retrieval can never surface it early. Reveals follow a phased ladder, and every drift scan audits for reveals that arrived ahead of schedule. Least disclosure, applied to fiction: the model only ever holds what the current phase allows it to know.
+11. **Sealed-knowledge architecture** — two classes of secrets, two treatments. Storyteller-held secrets live in Gem instruction text (never in knowledge files) so the storyteller can pace reveals in-story; that boundary is *behavioral guidance*, not access control, and it is backed by compensating controls: a phased reveal ladder, drift scans that audit for early or implied reveals, a reaction-proportionality check, and a human brake. A second class of sealed material never enters any Gem or corpus at all — it is held in local files only, and the pipeline tracks reveal-eligibility metadata (which phase a reveal is in), never the content.
 12. **Faction dashboards (clocks as data)** — world clocks live in a single source-of-truth JSON that feeds a Google Sheets dashboard. Clock state is data with one owner, not prose scattered across archives; the pipeline updates the JSON, and every view of the world reads from it.
 13. **API tandem line** — a second model API works as a production assistant (consults, first drafts, audits) behind a human QC gate. Its output is draft-only until reviewed against canon. The operational lessons from running it are documented in the case study, including the run where a target chat's stored model silently differed from the intended one: five injections failed 5/5 on the stored model and landed 5/5 after the switch.
 
 ## Components
 
-1. **System prompts (Gemini Gems)** — role definition, mechanics rulesets, boundary constraints, and the full state contract (turn blocks, clocks, audits, compression, voice tags). Documented: [`system-prompt.md`](system-prompt.md). Four more Gems run the other sagas on the same apparatus — plus a fifth "Shadow Director" Gem that fires crossover ripple events between sagas — proving the contract is genre-independent.
+1. **System prompts (Gemini Gems)** — role definition, mechanics rulesets, boundary constraints, and the full state contract (turn blocks, clocks, audits, compression, voice tags). Documented: [`system-prompt.md`](system-prompt.md). Four more Gems run the other sagas on the same apparatus — plus a fifth "Shadow Director" Gem that fires crossover ripple events between sagas. Six lines on one contract demonstrate breadth; they do not by themselves prove genre independence. Formal validation concentrates on one reference implementation — the Jujutsu Kaisen saga, "The Hollow Vow" — with bounded cross-saga integration tests against a designated partner line, "Cursed Resonance".
 2. **Retrieval corpus (NotebookLM)** — world bibles, series bible (canon v2.0), enemy bestiary, and the Delta Log. Sample: [`docs/world-bible-resonance.md`](docs/world-bible-resonance.md)
 3. **Output schemas** — `[TURN STATE]` per turn, `[SESSION LOG FOR NOTEBOOK]` per session/combat. Samples: [`sample-logs/`](sample-logs/)
 4. **HITL validation pipeline** — self-audit → human audit → correct → commit. Nothing enters the corpus unaudited.
+
+## Component status
+
+Status key: **Implemented** = running in production play. **Proposed** = design ratified, build not started. **Planned** = sequenced in the build order (see the case study roadmap).
+
+| Component | Status |
+|---|---|
+| Per-turn state contract, self-audit turns, human audit gate | Implemented |
+| Canon sync (Markdown → Drive → NotebookLM → Gems) | Implemented |
+| Showrunner sweep (archive, world-moves, drift scan, briefs) | Implemented — session-close / on-request triggers |
+| Shadow Director guarded injections + injection log | Implemented |
+| Faction dashboards (clock JSON → Sheets view) | Implemented |
+| API tandem line behind the QC gate | Implemented |
+| Item 0: pre-migration Skill packaging (backups by Oct 31, 2026) | Planned — build step 1 |
+| Canon Test Suite — four classes, dirty-baseline run on the reference saga | Planned — build step 2 |
+| File-level corpus quarantine | Planned — build step 3 |
+| Portfolio Proof Pack (swimlane, redacted diff artifact, before/after scores) | Planned — build step 4 |
+| Session-Start State Handshake (incl. ledger/surface beat budget) | Planned — build step 5 |
+| Base faction rule v2 (evaluate always, act when justified) + LW-3 + LW-4 | Planned — build step 6 |
+| LW-1 Scavenger Cascade (capped) | Planned — build step 7 |
+| LW-2 Weaponized Rumor Feedback (closed design, conditions in the case study) | Planned — build step 7, last |
+| State Reconciliation Contract + deterministic pre-sweep parser (first target: the reference saga) | Proposed — contract adopted Oct 23, 2026; governs the parser build |
+| Epistemic typing ([FACT] / [BELIEF: holder]) + Epistemic Promotion Audit | Proposed — lands with the drift-scan/parser work |
+| Fun layer (Forked Consequence engine, voice-ledger merge, cycle exploit windows, pipeline-selected callbacks, natural stopping points) | Proposed — ratified Oct 23, 2026; Gem-instruction pieces batch into Item 0's edit window |
+
+One reusable state-management workflow, six live applications, one deeply validated reference implementation, and a bounded set of cross-saga integration tests — that is the claim this repo is organized to earn. The reference implementation is the Jujutsu Kaisen saga, "The Hollow Vow"; the integration partner is "Cursed Resonance".
 
 ## Living World Pipeline
 
@@ -63,7 +89,7 @@ flowchart LR
     B --> C[Google Drive<br/>in-place, same file IDs]
     C --> D[NotebookLM<br/>auto-syncs notebooks]
     D --> E[Gem knowledge files<br/>refreshed]
-    F[Play sessions<br/>Gem chats] --> G[Nightly pipeline<br/>~9:40 PM ET]
+    F[Play sessions<br/>Gem chats] --> G[Showrunner sweep<br/>session close / on request]
     G --> H[Session archives]
     G --> I[Faction clock ledger]
     G --> J[Drift scan<br/>vs canon]
@@ -72,7 +98,7 @@ flowchart LR
 
 **Canon sync (the maintenance flow):** edit the Markdown source of truth → run `canon-sync.sh` (rebuilds every `.docx` through a Markdown converter, one command) → upload in place to each saga's Drive folder (same file IDs, so no link ever breaks) → NotebookLM auto-syncs the notebooks → the Gems read refreshed knowledge files. No manual reformatting, no drift between the source and what the model sees.
 
-**Nightly loop:** read new play-chat messages since the last watermark → archive the session (raw log + chronicle delta + final turn state) → advance faction clocks and resolve off-screen NPC actions with real consequences → drift-scan new material against canon (contradictions flagged with a proposed fix, never silently rewritten) → write a per-saga brief (clock positions, what's about to detonate, hooks for next session). If no saga had new play, the run stays silent.
+**Showrunner sweep:** a session's close triggers that saga's sweep; sweeps also run on request, and there are no silent scheduled runs. The sweep reads new play-chat messages since the last watermark → archives the session (raw log + chronicle delta + final turn state) → advances faction clocks and resolves off-screen NPC actions with real consequences → drift-scans new material against canon (contradictions flagged with a proposed fix, never silently rewritten) → writes a per-saga brief (clock positions, what's about to detonate, hooks for next session). Cross-saga ripples and handshakes are queued locally and delivered when the target saga is next opened (pull-on-play), not pushed into closed chats. If no saga had new play, the run stays silent.
 
 **Operating rules:** read-only on play chats — the pipeline never types into or sends anything inside a session; anything outbound needs explicit per-message approval. The human alone decides canon. Seeded mysteries are never resolved, hinted at, or spent by the system. State lives in plain Markdown files (watermarks, ledgers, archives) — auditable, diffable, portable.
 
@@ -90,14 +116,14 @@ Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the main
 - **Faction clocks as hidden state:** off-screen world state that must advance on triggers (failed rolls, elapsed time) *and* between sessions — the hardest case for an LLM, since the player never sees it to catch errors.
 - **Retrieval over prompt-stuffing:** long reference docs live in NotebookLM, not the system prompt, keeping the prompt lean and preserving the context window for live session state. Cite-don't-restate extends this into the output schema: blocks reference corpus sections by tag instead of reciting them.
 - **Human gate before commit:** numeric state is where LLMs hallucinate most. Unverified output never becomes source of truth.
-- **Append-only canon:** the corpus records history (deltas), never rewrites it. Versioning makes retcons structurally impossible rather than merely forbidden.
+- **Append-only canon:** the corpus records history (deltas), never rewrites it. Append-only history preserves prior decisions; validation and explicit corrections govern the current projection.
 
 ## Failure modes this design anticipates
 
 | Failure mode | Mitigation in this design |
 |---|---|
 | State drift over long contexts (stats silently change) | Structured block forces full state restatement every turn; self-audit diffs every 5 turns; human audit diffs against prior log |
-| Context rot in very long sessions | Compression ritual: portable canon block restarts the session in fresh context with zero loss of load-bearing state |
+| Context rot in very long sessions | Compression ritual: portable canon block restarts the session in fresh context, designed to preserve defined load-bearing state |
 | Silent self-contradiction | Audit turns: model re-reads its own last block, open `AUDIT FLAG`s, never silent overwrites |
 | Hallucinated mechanics (model invents rules) | Boundary constraint: "constantly reference uploaded Knowledge files"; audits check against world bible |
 | Missed clock advancement (off-screen state stalls) | Explicit trigger rules + between-session ticks; every block must list all clocks |
@@ -107,7 +133,7 @@ Full case study: [`living-world-pipeline/`](living-world-pipeline/) — the main
 | Context rot at session boundaries | Session hygiene: "previously on" rebuilt from the last closing block; full logs never re-pasted |
 | Cross-scenario contamination (two scenarios, one apparatus) | Canon versions are namespaced per saga; each story carries its version in every block |
 | Retrieval misses (model ignores corpus) | Docs organized by mechanic; key terms mirrored in the prompt as retrieval anchors |
-| Compounding errors (bad state committed, then built on) | Human gate — nothing enters the corpus unaudited; deltas make history inspectable |
+| Compounding errors (bad state committed, then built on) | Human review reduces the risk of bad commits; deltas make history inspectable; planned regression tests and state reconciliation add independent checks |
 | Unguarded cross-chat injection (background event hijacks a live scene) | Guarded format only: `[SHADOW DIRECTOR OVERRIDE]` header + background-only guard line; every injection logged with its per-target outcome |
 | Unearned reveal (sealed secret surfaces before its phase) | Secrets held in instruction text only, never in knowledge files; phased reveal ladder; drift scans audit for early reveals |
 | Stored configuration differs from intended (wrong model serves a chat) | Pre-flight check of stored settings before multi-target runs; diagnose at the config layer before retrying content |

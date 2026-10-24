@@ -6,12 +6,12 @@
 
 | Saga | Genre | Notes |
 |---|---|---|
-| Cursed Resonance | Grimdark Lovecraftian mecha | Original setting |
+| Cursed Resonance | Grimdark Lovecraftian mecha | Original setting — designated cross-saga integration partner |
 | Unwritten Age | Dragon Ball | Original saga |
-| The Hollow Vow | Jujutsu Kaisen | Original saga |
+| The Hollow Vow | Jujutsu Kaisen | Original saga — **reference implementation**: formal validation concentrates here (active faction clocks, recurring NPCs, permanent consequences, and the system's flagship sealed-knowledge case) |
 | Pale Fire | Digimon | Original saga |
 | The Spin-Off | Spin-off line | Fed by a rumor-propagation sheet: main-story events mutate as they travel into this line. The distortion is a designed mechanic, not an error source |
-| Second Author's Saga | Original saga, second author | Built from the author's own source texts; runs on the same state contract under the cross-line decontamination rules below |
+| Second Author's Saga | Original saga, second author | Built from the author's own source texts. Formal policy (ratified October 23, 2026): on-request only, with zero scheduled processing — no sessions or sweeps run for it, and no automatic cross-saga propagation into it |
 
 A Shadow Director layer sits above them all, turning session deltas into cross-line ripple events. It only ever speaks in the guarded format documented below.
 
@@ -35,16 +35,37 @@ Canon lives as Markdown files, one directory per saga: series bibles, combat cod
 
 No manual reformatting. No drift between the source and what the model sees. The whole path is one script plus an upload.
 
-### Path 2 — Nightly showrunner loop
+### Path 2 — Showrunner sweep (session close / on request)
 
-A scheduled run (~9:40 PM ET) does six things, in order:
+Sweeps are triggered by a session's close (the standing "that's a wrap" ritual) or run on request; a saga accumulating roughly 12–15 unswept turns raises a flag in the next debrief. There are no silent scheduled runs. A sweep works in seven stages — capture, normalize/reconcile, evaluate, validate, digest, commit, queue — which unfold as six steps:
 
 1. **READ** — new messages from each saga's play chat since the last stored watermark.
 2. **ARCHIVE** — session filed by date: raw log, cleaned chronicle delta, final turn state.
 3. **WORLD-MOVES** — every faction clock advanced based on what happened (or didn't happen); off-screen NPC actions resolved with clear fictional consequences, written into the clock ledger.
-4. **DRIFT SCAN** — new material checked against canon: contradictions, unmarked new facts, wrong-saga terminology. Each flagged with a proposed fix — never silently rewritten.
+4. **DRIFT SCAN** — new material checked against canon: contradictions, unmarked new facts, wrong-saga terminology. Each flagged with a proposed fix — never silently rewritten. The scan also runs the Epistemic Promotion Audit (below): a belief narrated as objective fact is flagged as a contradiction.
 5. **BRIEF** — per-saga brief: clock positions, what's about to detonate, 2–3 hooks for the next session.
-6. **DELIVER** — a report goes out for every saga with new play. If nothing was played anywhere, the run stays silent.
+6. **DELIVER** — a report goes out for every saga with new play. If nothing was played anywhere, the run stays silent. Ripples and handshakes are queued locally and delivered when the target saga is next opened (Lazy Pull-On-Play); deliberate cross-saga broadcast events on the operator's order are the carve-out.
+
+**Run record and acceptance.** Every run records its input watermark, source versions, actions taken, errors, and approval status. A run counts as successful only if: no duplicated deltas, no unapproved canon changes, correct clock arithmetic, no known premature reveals, and failures recoverable from the run record. Prose quality is not a state-correctness metric.
+
+### Field-level authority
+
+One declared authority per data type, with an explicit sync direction. Everything else is a view.
+
+| Data | Authority | Notes |
+|---|---|---|
+| Canon lore + approved rulings | Versioned Markdown files | The `.md` sources Path 1 syncs |
+| Numeric state + faction clocks | Versioned state ledger (clock JSON) | Dashboards render it; they never own it |
+| Raw session evidence | Archived session logs | The record reconciliation checks against |
+| Pending decisions | Decision queue | Surfaced in the operator digest; nothing auto-commits |
+| Secret content | Restricted storyteller store (local files) | The pipeline tracks reveal-eligibility metadata only |
+| Test expectations | Version-controlled fixtures | Canon Test Suite inputs and expected outputs |
+
+Google Sheets and NotebookLM are representations and retrieval layers. Neither is ever an authority.
+
+### Epistemic typing
+
+Ledger entries carry one of two types. **[FACT]** — verified on-screen in play, or established by an operator ruling. **[BELIEF: holder]** — a position held by a named NPC or faction, attached to that holder's posture or next move. Possibilities are never tracked: a possibility is either sealed lore (the reveal ladder governs it) or transcript chatter. Rumor traffic is auto-typed [BELIEF: Street_Rumor], which is what structurally protects the rumor-feedback loop (LW-2) from promoting its own distortions.
 
 ## The Shadow Director protocol
 
@@ -62,11 +83,13 @@ Every injection is written to an injection log with its per-target outcome (land
 
 ## Faction dashboards: clocks as data
 
-Faction clocks are the pipeline's most-touched state, so they stopped living in prose. A single source-of-truth JSON holds every line's clocks (name, position, size, last trigger), and a Google Sheets dashboard renders it for a fast human read. The nightly loop updates the JSON during WORLD-MOVES; the dashboard is a view, never a second source. When a brief cites a clock position, it cites the JSON's value.
+Faction clocks are the pipeline's most-touched state, so they stopped living in prose. A single source-of-truth JSON holds every line's clocks (name, position, size, last trigger), and a Google Sheets dashboard renders it for a fast human read. The sweep updates the JSON during WORLD-MOVES; the dashboard is a view, never a second source. When a brief cites a clock position, it cites the JSON's value.
+
+**Ledger vs. surface.** Clock ticks in the ledger are uncapped: every earned advance lands in the data layer, under the evaluate-always rule below. A separate world-beat budget — one major beat plus up to two minor — caps only what gets promoted into the Session-Start State Handshake for dramatization, so slow-burn clocks are never starved while the narrative surface stays focused. A clock completing, or crossing its midpoint, is major-eligible.
 
 ## Sealed knowledge
 
-Some material is secret by design: identities, plans, and reveals the player has not earned yet. That material is held in instruction text only, never in knowledge files, because anything in a knowledge file is one retrieval away from surfacing early. Reveals follow a phased ladder (what may be hinted, what may be shown, what may be confirmed), and every drift scan includes an audit for unearned reveals: a secret that appears ahead of its phase is flagged like any other contradiction.
+Some material is secret by design: identities, plans, and reveals the player has not earned yet. It comes in two classes with two treatments. **Storyteller-held secrets** live in Gem instruction text, never in knowledge files, because the storyteller has to know a secret to pace its reveal in-story. That boundary is behavioral guidance, not access control — nothing technical stops a model from blurting — so it runs with compensating controls: a phased reveal ladder (what may be hinted, what may be shown, what may be confirmed), drift scans that audit for reveals ahead of phase, a reaction-proportionality check that catches leaks by implication, and a human brake. **Sealed material** never enters any Gem or corpus at all: it is held in local files only, and the pipeline tracks nothing about it except reveal-eligibility metadata — which phase a reveal has reached, never the content. A secret that surfaces ahead of its phase, in either class, is flagged like any other contradiction.
 
 ## Cross-line decontamination
 
@@ -107,10 +130,10 @@ This order supersedes the sequencing in today's earlier roadmap notes. It came o
 
 **Step 1 — Item 0: Pre-Migration Skill Packaging Spec (highest urgency, due before November 17, 2026).**
 *Problem:* Gems migrate to Skills on November 17. Migrated units arrive as inactive drafts, under stricter knowledge-format constraints. An unprepared cutover risks six live sagas waking up in a new format with unverified instructions and no sync path.
-*Design:* (a) Instruction mapping: a SKILL.md structure per saga, with explicit boundaries for persona and mechanics, the standing rituals, and the sealed reveal ladder. (b) A knowledge-format and sync-fallback audit, including the known trap: if Skills do not auto-sync live Google Docs by ID, the canon-sync script gains a fallback branch that emits clean .md bundles alongside the .docx output. (c) A cutover runbook: all six Gems' instruction blocks exported to local, versioned backups by November 15, plus a post-migration activation and verification ritual.
+*Design:* (a) Instruction mapping: a SKILL.md structure per saga, with explicit boundaries for persona and mechanics, the standing rituals, and the sealed reveal ladder. (b) A knowledge-format and sync-fallback audit, including the known trap: if Skills do not auto-sync live Google Docs by ID, the canon-sync script gains a fallback branch that emits clean .md bundles alongside the .docx output. (c) A cutover runbook on fixed dates: all six Gems' instruction blocks exported to local, versioned backups by **October 31**; a compatibility test by **November 7**; the Markdown-bundle fallback validated in a fresh session by **November 12** (a backup of instructions is not a reproduced environment — the fallback has to be proven, not assumed); freeze and verify **November 15**; platform migration from **November 17**; a verification pass **November 18**. Every Gem-instruction addition from the recent design rounds (Sensory Cold Open, the fun layer below, natural stopping points, callback acceptance via handshake, state-block echo) batches into this item's single pre-migration edit window per Gem, so the October 31 backups capture the improved text and no saga's editor is fought twice.
 *Why it matters:* every other item on this roadmap assumes the sagas survive the platform move. This one makes sure they do.
 
-**Step 2 — Baseline Canon Test Suite, the dirty run.** Golden questions run against the corpus exactly as it stands in NotebookLM, plus adversarial probes: 3 per saga, run only on canon commits, in disposable fresh Gem chats that are deleted afterward (never in live play chats; context pollution). The baseline's failures are not hidden. They are recorded, and they are portfolio evidence: this is what turns the lab's central claim (designed corpus plus retrieval strategy on a managed RAG platform) into a checked metric instead of a hope.
+**Step 2 — Baseline Canon Test Suite, the dirty run.** The suite has four test classes: exact state, canon conflicts, stale-source retrieval, and premature secret disclosure (including indirect-leakage probes — leaks by implication, not just blurts). Golden questions run against the corpus exactly as it stands in NotebookLM, plus adversarial probes: 3 per saga, run only on canon commits, in disposable fresh Gem chats that are deleted afterward (never in live play chats; context pollution). The first full run centers on the reference saga (The Hollow Vow), whose corpus carries the known stale-document contamination the quarantine in step 3 exists to fix. The baseline's failures are not hidden. They are recorded, and they are portfolio evidence: this is what turns the lab's central claim (designed corpus plus retrieval strategy on a managed RAG platform) into a checked metric instead of a hope. One caveat, kept on the record: improvement on a small suite demonstrates improvement on those tests, not universal retrieval accuracy.
 
 **Step 3 — File-Level Corpus Quarantine.** Superseded documents are removed from the active source set. Lifecycle tags alone do not work here: NotebookLM chunking ignores document headers, so a tag the retriever cannot see is bookkeeping, not governance. Tags (Active / Historical / Archive) stay as bookkeeping only. After quarantine, the suite re-runs and the clean pass is recorded next to the dirty baseline. The live problem this fixes is real: corpus documents still describe a deleted continuity's protagonist and a retired power system, and retrieval surfaces that dead material as if it were current.
 
@@ -118,11 +141,18 @@ This order supersedes the sequencing in today's earlier roadmap notes. It came o
 
 **Step 5 — Living State Card, redesigned as a Session-Start State Handshake.** The card is injected into the play chat at session start: a superseding header, diffs stated explicitly, and the Gem echoes the card ID in its state blocks so the handshake is verifiable in the log. It never goes in Gem instructions and never rides a mounted Doc. The handshake also carries the LW-5 texture block and cycle state (below). The Sensory Cold Open, a two-sentence pan at scene transitions (one clock symptom, one texture detail), ships as a one-time standing instruction in the same step.
 
-**Step 6 — Base Rule + LW-3 (Debt & Favor) + LW-4 Grudge Drift only.** Borrowed Cadence is cut as a mechanic (parrot risk); it survives only as a drift-scan observation. Specs in the cluster below.
+**Step 6 — Base Rule v2 + LW-3 (Debt & Favor) + LW-4 Grudge Drift only.** The base rule ships in its amended form: every faction is *evaluated* each sweep; it acts only when goal + capability + trigger + material effect justify it, otherwise the no-action reason is recorded (spec below). Borrowed Cadence is cut as a mechanic (parrot risk); it survives only as a drift-scan observation. Specs in the cluster below.
 
-**Step 7 — LW-1 (Scavenger Cascade), capped at one active node per saga; then LW-2 (Weaponized Rumor Feedback) last, under review.** Gemini's spar position was to cut LW-2 entirely: its payoff is hostage to two sagas' play cadence. The hub's dissent stands on the record: the one-way rumor engine already runs, so the marginal cost is a briefs rule. LW-2 is listed last with that note rather than dropped. Bryan's call.
+**Step 7 — LW-1 (Scavenger Cascade), capped at one active node per saga; then LW-2 (Weaponized Rumor Feedback) last — decision closed October 23, 2026: KEEP.** The dispute record: one spar position was to cut LW-2 entirely (its payoff is hostage to two sagas' play cadence); the dissent noted the one-way rumor engine already runs, so the marginal cost is a briefs rule. The settled design keeps LW-2 last in the living-world queue under implementation conditions (spec below): the rumor must persist through two qualifying sessions in its source saga; it arrives in the target saga as a *pending* false-belief event the player can accept, reject, or defer — never as a canon edit; one controlled seeded test runs before the mechanic is trusted; and it is cut if it ever needs frequent manual sync.
 
-**Integrity additions (planned).** The drift scan gains a reaction proportionality check: NPC reactions that exceed publicly established stakes get flagged, which catches leaks by implication that category gates miss. A schema and consistency gate on state writes (clock bounds, no silent decreases) is planned as the named fix for the chat-to-state extraction boundary.
+**Integrity additions (planned).** The drift scan gains a reaction proportionality check: NPC reactions that exceed publicly established stakes get flagged, which catches leaks by implication that category gates miss. A schema and consistency gate on state writes (clock bounds, no silent decreases) is planned as the named fix for the chat-to-state extraction boundary. Both are governed by the State Reconciliation Contract (adopted October 23, 2026), which also governs the parser build:
+
+- Every state delta carries a unique ID, its saga ID, its source session and turn, and the expected base-state version it was computed against.
+- Re-applying an accepted delta is a no-op (idempotent commits).
+- A delta that arrives against a stale base version is flagged, never silently applied.
+- Conflicts are never auto-resolved by newest-wins.
+
+**Deterministic pre-sweep parser (planned).** Before a sweep's reconciliation, deterministic code parses captured session text for the Gems' per-turn state blocks, diffs first against last, and matches NPC names against the voice ledgers, handing the model a pre-digested delta instead of raw transcript. The extraction and validation code is deterministic for supported inputs; malformed or ambiguous outputs are rejected into an exception queue, never guessed at. First target: the reference saga (The Hollow Vow), whose per-turn state block is standardized as part of reference setup; the parser covers state-block-bearing sagas first.
 
 **Sequencing logic.** Pipeline-side items (the base rule, LW-1/2/3, grudge drift, the LW-5 math) are migration-proof. NotebookLM-side items (quarantine, golden questions) are near-proof. Only delivery mechanisms sit on the Gem surface, and only those carry November 17 risk. The order spends effort where the platform cannot take it away first.
 
@@ -130,19 +160,19 @@ This order supersedes the sequencing in today's earlier roadmap notes. It came o
 
 Five mechanics that run on one base rule. All planned, none shipped yet. Build positions are set by the consolidated order above.
 
-**Base rule: one action per faction per sweep.**
+**Base rule: evaluate always, act when justified.**
 *Problem:* faction clocks measure pressure, but a countdown is not an opponent. Factions can feel static between detonations.
-*Design:* every living-world sweep, each active faction takes ONE concrete off-screen action toward its agenda, logged in its clock ledger (a seizure, a purchase, a recruitment, a burial). Every item below runs on this rule.
-*Why it matters:* it is the difference between a world that waits and a world that moves. Simple, auditable, and the engine under the rest of this cluster.
+*Design:* every living-world sweep, each active faction is *evaluated* against its agenda. It takes a concrete off-screen action (a seizure, a purchase, a recruitment, a burial) only when four tests pass: a goal the action serves, the capability to do it, a trigger in recent events, and a material effect worth logging. When any test fails, the faction holds — and the no-action reason is recorded in its clock ledger. Forced activity on every sweep guaranteed churn, not quality; evaluation is universal, action is earned. Every item below runs on this rule.
+*Why it matters:* it is the difference between a world that waits and a world that moves on reasons. Simple, auditable, and the engine under the rest of this cluster.
 
 **LW-1. The Scavenger Cascade.** (Build step 7, capped at one active node per saga.)
 *Problem:* the player's battlefields and abandoned sites sit frozen in the archive after he leaves them.
 *Design:* the sweep tags sites of wreckage, casualties, or power vacuums as carrion nodes, each spawning a short clock. Minor factions and opportunists strip the site; when the clock fills, a low-tier group returns upgraded with the player's own leftovers (salvaged gear, claimed micro-turf, mutated capability).
 *Why it matters:* consequences with a half-life. The player's past violence literally re-enters the story wearing his discarded equipment.
 
-**LW-2. Weaponized Rumor Feedback (closed-loop mutation).** (Build step 7, last; under review, Bryan's call. See step 7 for the cut/dissent record.)
+**LW-2. Weaponized Rumor Feedback (closed-loop mutation).** (Build step 7, last. Decision closed October 23, 2026: KEEP, under the conditions in step 7 and below.)
 *Problem:* the spin-off's rumor engine runs one way: main-saga events mutate as they travel outward, then stop.
-*Design:* close the loop. A distorted version (the Myth) that survives two spin-off sessions unchallenged is exported back into the main saga as a Foreign Misconception: factions react to the exaggeration instead of the truth, fortifying against capabilities the player does not have, repricing bounties on a legend.
+*Design:* close the loop, under governance. A distorted version (the Myth) must first persist through two qualifying sessions in its source saga. It then arrives in the target saga as a *pending* false-belief event — typed [BELIEF: Street_Rumor] under the epistemic rules above — which the player can accept, reject, or defer when that saga is next opened. It is never written in as a canon edit. Accepted, it becomes a Foreign Misconception: factions react to the exaggeration instead of the truth, fortifying against capabilities the player does not have, repricing bounties on a legend. One controlled seeded test runs before the mechanic is trusted in live play, and the mechanic is cut if it ever needs frequent manual sync.
 *Why it matters:* the player ends up fighting his own mythology. Emergent, cheap, and unique to this system's two-layer saga structure.
 
 **LW-3. Debt & Favor Economy (NPC off-screen agency).** (Build step 6.)
@@ -164,11 +194,28 @@ Five mechanics that run on one base rule. All planned, none shipped yet. Build p
 
 **Horizon.** After the November 17, 2026 Gems-to-Skills migration, scheduled tasks can invoke a saga directly, making true between-session "meanwhile" interludes possible: the platform unlock this cluster is designed to grow into.
 
+### The fun layer (ratified October 23, 2026 — designed, not yet built)
+
+The machinery above keeps state *correct*. This layer exists because correctness is not the same as fun, and the two designs were deliberately kept from taxing each other.
+
+**Forked Consequence engine.** The per-turn state block gains two fields: [SCENE_TENSION: Low | Rising | Snap-Point] and [ACTIVE_TRADE_OFF]. On a decisive move in a Rising or Snap-Point scene, the Gem may not resolve cleanly: the objective is achieved, and a cost is paid in exactly one currency — time/heat, resource/condition, or an NPC's trust/safety. The fork is a resolution *shape* for decisive moves, not a menu recited on every action, and its harshness is tuned per saga. Two guardrails from the operator govern it:
+
+- *Costs must be earned by established stakes.* A plan that genuinely deserves a clean success resolves clean. The fork never fires merely because a move was clever; punishing cleverness itself would make the engine a disguised penalty rule, not a source of dramatic choices.
+- *The six-turn Snap-Point is a pacing trigger, not a punishment.* A scene that runs six turns without a decision or a state change hits Snap-Point, and the NPC's Default Next Move (below) fires in the room and *changes the situation*. Nothing is automatically lost; losses happen only when the fiction earns them.
+
+**NPC voice ledgers absorb the NPC model.** No third table: each arc-active NPC's ledger row carries Voice_Cadence, Core_Want (what they want, in their own terms), Active_Pressure, Default_Next_Move (what they do within roughly two sessions if nobody intervenes), and Compromised_By. A proposed Leverage field was cut as standing data — it is scene-local, and tracking it per NPC across six sagas is empty-cell maintenance. Only the 3–5 arc-active NPCs carry live Pressure/Next_Move values into the Session-Start Handshake; everyone else stays cold in the ledger.
+
+**Cycles carry two halves.** Every cycle entry handed to a Gem carries a [Threat_Vector] *and* a [Player_Exploit_Window] — one concrete way the player can surf the cycle (cover, weapon, shortcut). Threat-only cycles are a lore lecture; the pair makes the cycle a tactical surface.
+
+**Callbacks are pipeline-selected.** At session start the sweep selects 1–2 canon callbacks and delivers them in the handshake. Gems never browse their own corpus hunting for callbacks — left to pick their own, they repeat favorites and invent the rest.
+
+**Natural stopping points.** Scenes may end at a low pulse. The forced-cliffhanger ending is named and banned as a default; tension is earned by state, not by cutting every scene on a gasp.
+
 ## Why this matters
 
 This is applied AI systems work, not a toy demo:
 
-- **Multi-agent orchestration** — five Gems plus an unattended showrunner, coordinated through files rather than a message bus.
+- **Multi-agent orchestration** — the saga Gems, a Director layer, and the showrunner pipeline, coordinated through files rather than a message bus.
 - **Long-context state management** — Markdown as the durable memory layer; delta-only updates; portable canon blocks that survive context resets.
 - **Retrieval-augmented canon** — Drive → NotebookLM → Gem knowledge, with a one-command sync path that keeps the corpus identical to the source of truth.
 - **Human-in-the-loop at every load-bearing decision** — audits, canon commits, and anything outbound all pass a human gate. The automation runs the world; it doesn't get the final word.
